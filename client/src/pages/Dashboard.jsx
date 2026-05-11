@@ -6,6 +6,8 @@ import { useNotifications } from '../context/NotificationContext';
 import api from '../api/axios';
 import { LogOut, LayoutDashboard, Settings, Users, FolderKanban, Plus, X, Bell, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
+import EmptyState from '../components/EmptyState';
+import { CardSkeleton, StatSkeleton } from '../components/Skeleton';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -58,14 +60,14 @@ const Dashboard = () => {
         <nav className="flex-1 flex flex-col gap-3">
           <NavItem icon={<LayoutDashboard size={22} />} label="Dashboard" to="/" active />
           <NavItem icon={<FolderKanban size={22} />} label="Projects" to="/" />
-          <NavItem icon={<Users size={22} />} label="Team" to="/" />
-          <NavItem icon={<Settings size={22} />} label="Settings" to="/" />
+          <NavItem icon={<Users size={22} />} label="Team" to="/team" />
+          <NavItem icon={<Settings size={22} />} label="Settings" to="/settings" />
         </nav>
 
         <div className="pt-8 border-t border-white/5">
           <button 
             onClick={logout}
-            className="flex items-center gap-3 text-slate-400 hover:text-white transition-all duration-300 w-full group !bg-transparent"
+            className="flex items-center gap-3 text-slate-400 hover:text-white transition-all duration-300 w-full group !bg-transparent outline-none border-none cursor-pointer"
           >
             <div className="p-2 rounded-lg group-hover:bg-red-500/10 group-hover:text-red-400 transition-all">
               <LogOut size={20} />
@@ -82,11 +84,23 @@ const Dashboard = () => {
             <h1 className="text-4xl font-bold mb-2 tracking-tight">Welcome back, {user?.name}</h1>
             <p className="text-slate-400 text-lg">Here's an overview of your active workspace.</p>
           </div>
+          
+          <div className="flex-1 max-w-xl mx-12 relative group hidden xl:block animate-fade-in" style={{ animationDelay: '100ms' }}>
+            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+              <Plus className="text-slate-500 group-focus-within:text-indigo-400 transition-colors rotate-45" size={20} />
+            </div>
+            <input 
+              type="text" 
+              placeholder="Search tasks, projects, members... (Ctrl+K)" 
+              className="w-full bg-white/5 border border-white/5 rounded-2xl py-4 pl-14 pr-6 text-sm text-slate-200 outline-none focus:bg-white/10 focus:border-indigo-500/50 transition-all shadow-inner"
+            />
+          </div>
+
           <div className="flex items-center gap-6">
             <div className="relative">
               <button 
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
-                className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 relative group"
+                className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 relative group outline-none"
               >
                 <Bell size={24} className="group-hover:rotate-12 transition-transform" />
                 {unreadCount > 0 && (
@@ -101,7 +115,7 @@ const Dashboard = () => {
                 <div className="absolute right-0 mt-4 w-96 glass-card !p-0 z-50 border-white/10 overflow-hidden shadow-2xl animate-fade-in">
                   <div className="p-5 border-b border-white/10 flex justify-between items-center bg-white/5">
                     <h3 className="font-bold text-lg">Notifications</h3>
-                    <button onClick={markAllRead} className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-full transition-all">Mark all read</button>
+                    <button onClick={markAllRead} className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 px-3 py-1.5 rounded-full transition-all outline-none border-none cursor-pointer">Mark all read</button>
                   </div>
                   <div className="max-h-[450px] overflow-y-auto">
                     {notifications.length === 0 ? (
@@ -136,7 +150,7 @@ const Dashboard = () => {
               New Project
             </button>
             <div className="flex items-center gap-4 bg-white/5 p-2 pr-6 rounded-2xl border border-white/5">
-              <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-500/20">
+              <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-full flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-500/20">
                 {user?.name?.charAt(0)}
               </div>
               <div className="text-left">
@@ -148,35 +162,40 @@ const Dashboard = () => {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <StatCard title="Active Projects" value={stats.projectsCount} icon={<FolderKanban size={24} className="text-indigo-400" />} />
-          <StatCard title="My Pending Tasks" value={stats.myTasksCount} icon={<LayoutDashboard size={24} className="text-emerald-400" />} />
-          <StatCard title="Overdue Tasks" value={stats.overdueCount} icon={<Clock size={24} className="text-rose-400" />} color="rose" />
+          {loading ? (
+            <>
+              <StatSkeleton />
+              <StatSkeleton />
+              <StatSkeleton />
+            </>
+          ) : (
+            <>
+              <StatCard title="Active Projects" value={stats.projectsCount} icon={<FolderKanban size={24} className="text-indigo-400" />} />
+              <StatCard title="My Pending Tasks" value={stats.myTasksCount} icon={<LayoutDashboard size={24} className="text-emerald-400" />} />
+              <StatCard title="Overdue Tasks" value={stats.overdueCount} icon={<Clock size={24} className="text-rose-400" />} color="rose" />
+            </>
+          )}
         </div>
 
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl font-bold tracking-tight">Recent Projects</h2>
-          <button className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors text-sm">View all projects</button>
+          <h2 className="text-3xl font-bold tracking-tight">Recent Projects</h2>
+          <button className="text-indigo-400 font-bold text-sm hover:text-indigo-300 transition-colors uppercase tracking-widest bg-transparent border-none cursor-pointer outline-none">View all projects</button>
         </div>
 
         {projectsLoading ? (
-          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[1,2,3].map(i => <div key={i} className="glass-card h-48 animate-pulse bg-white/5"></div>)}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
           </div>
         ) : projects.length === 0 ? (
-          <div className="mt-10 glass-card text-center py-24 flex flex-col items-center border-dashed border-2 border-white/5">
-            <div className="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center text-indigo-400 mb-6">
-              <FolderKanban size={40} />
-            </div>
-            <h3 className="text-2xl font-bold mb-3">No projects found</h3>
-            <p className="text-slate-400 mb-8 max-w-sm mx-auto">Start by creating your first project to organize your team's workflow and tasks.</p>
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="btn-primary"
-            >
-              <Plus size={20} />
-              Create New Project
-            </button>
-          </div>
+          <EmptyState 
+            icon={FolderKanban}
+            title="No projects found"
+            message="Start by creating your first project to organize your team's workflow and tasks."
+            actionText="Create New Project"
+            onAction={() => setIsModalOpen(true)}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {projects.map((project, index) => (
@@ -190,7 +209,7 @@ const Dashboard = () => {
                   <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400 group-hover:scale-110 transition-transform">
                     <FolderKanban size={24} />
                   </div>
-                  <span className={`badge ${project.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>
+                  <span className={`badge ${project.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'}`}>
                     {project.status}
                   </span>
                 </div>
@@ -199,12 +218,12 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between pt-6 border-t border-white/5">
                   <div className="flex -space-x-3">
                     {project.members?.slice(0, 4).map((member) => (
-                      <div key={member.id} className="w-10 h-10 rounded-xl bg-indigo-600 border-4 border-[#0f172a] flex items-center justify-center text-xs font-bold shadow-xl" title={member.name}>
+                      <div key={member.id} className="w-10 h-10 rounded-full bg-indigo-600 border-4 border-[#0f172a] flex items-center justify-center text-xs font-bold shadow-xl overflow-hidden" title={member.name}>
                         {member.name.charAt(0)}
                       </div>
                     ))}
                     {project.members?.length > 4 && (
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 border-4 border-[#0f172a] flex items-center justify-center text-[10px] font-bold text-slate-400">
+                      <div className="w-10 h-10 rounded-full bg-slate-800 border-4 border-[#0f172a] flex items-center justify-center text-[10px] font-bold text-slate-400">
                         +{project.members.length - 4}
                       </div>
                     )}
@@ -223,7 +242,7 @@ const Dashboard = () => {
       {/* Create Project Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="glass-card w-full max-w-xl border-white/10 shadow-[0_0_100px_rgba(99,102,241,0.1)]">
+          <div className="glass-card w-full max-w-xl border-white/10 shadow-2xl">
             <div className="flex justify-between items-center mb-8">
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400">
@@ -231,7 +250,7 @@ const Dashboard = () => {
                 </div>
                 <h2 className="text-2xl font-bold tracking-tight">Create New Project</h2>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-400 hover:text-white">
+              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-400 hover:text-white outline-none border-none cursor-pointer">
                 <X size={24} />
               </button>
             </div>
@@ -241,17 +260,19 @@ const Dashboard = () => {
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="e.g. Website Redesign"
+                  placeholder="Enter project name..."
                   value={newProject.name}
                   onChange={e => setNewProject({...newProject, name: e.target.value})}
                   required
+                  minLength={3}
+                  maxLength={60}
                 />
               </div>
-              <div className="mb-8">
+              <div className="mb-10">
                 <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Description</label>
                 <textarea
-                  className="input-field min-h-[160px] resize-none"
-                  placeholder="Describe the goals and scope of this project..."
+                  className="input-field min-h-[120px] resize-none"
+                  placeholder="Add a brief description of the project..."
                   value={newProject.description}
                   onChange={e => setNewProject({...newProject, description: e.target.value})}
                 />
@@ -260,11 +281,11 @@ const Dashboard = () => {
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-400 hover:bg-white/5 transition-all border border-white/5"
+                  className="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-400 hover:bg-white/5 transition-all border border-white/5 cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="flex-1 btn-primary">
+                <button type="submit" className="flex-1 btn-primary border-none">
                   Create Project
                 </button>
               </div>
@@ -287,12 +308,12 @@ const NavItem = ({ icon, label, to = "#", active = false }) => (
 
 const StatCard = ({ title, value, icon, color = "indigo" }) => (
   <div className="glass-card !p-8 flex items-center justify-between group overflow-hidden relative">
-    <div className={`absolute top-0 right-0 w-24 h-24 bg-${color}-500/5 rounded-full -mr-12 -mt-12 transition-all group-hover:scale-150`}></div>
-    <div>
-      <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mb-3">{title}</p>
-      <p className="text-4xl font-bold tracking-tight group-hover:scale-110 transition-transform origin-left">{value}</p>
+    <div className={`absolute top-0 right-0 w-24 h-24 bg-${color}-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700`}></div>
+    <div className="relative z-10">
+      <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">{title}</p>
+      <p className="text-4xl font-bold tracking-tight">{value}</p>
     </div>
-    <div className={`p-5 bg-${color}-500/10 rounded-2xl group-hover:rotate-12 transition-all`}>
+    <div className={`p-4 bg-${color}-500/10 rounded-2xl text-${color}-400 group-hover:rotate-12 transition-transform duration-300 relative z-10`}>
       {icon}
     </div>
   </div>

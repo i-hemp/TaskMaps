@@ -4,6 +4,8 @@ import api from '../api/axios';
 import { Plus, MoreVertical, MessageSquare, Clock, User, ArrowLeft, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { TaskSkeleton } from '../components/Skeleton';
+import EmptyState from '../components/EmptyState';
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -95,11 +97,31 @@ const ProjectDetail = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-[#050811] flex items-center justify-center">
-      <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+    <div className="min-h-screen bg-[#050811] flex flex-col">
+      <div className="h-24 border-b border-white/5 bg-[#0f172a]/40 animate-pulse"></div>
+      <div className="flex-1 p-8 flex gap-8">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="w-96 flex-shrink-0 flex flex-col gap-6">
+            <div className="h-6 w-32 bg-white/5 rounded-full animate-pulse"></div>
+            <TaskSkeleton />
+            <TaskSkeleton />
+          </div>
+        ))}
+      </div>
     </div>
   );
-  if (!project) return <div className="p-20 text-center text-xl font-bold">Project not found</div>;
+
+  if (!project) return (
+    <div className="min-h-screen bg-[#050811] flex items-center justify-center">
+      <EmptyState 
+        icon={User}
+        title="Project not found"
+        message="The project you're looking for doesn't exist or you don't have access to it."
+        actionText="Back to Dashboard"
+        onAction={() => window.location.href = '/'}
+      />
+    </div>
+  );
 
   const columns = [
     { id: 'todo', title: 'To Do', color: 'slate' },
@@ -108,11 +130,21 @@ const ProjectDetail = () => {
     { id: 'done', title: 'Done', color: 'emerald' }
   ];
 
+  const getStatusColor = (color) => {
+    const colors = {
+      slate: 'bg-slate-500',
+      indigo: 'bg-indigo-500',
+      amber: 'bg-amber-500',
+      emerald: 'bg-emerald-500'
+    };
+    return colors[color] || colors.slate;
+  };
+
   return (
     <div className="min-h-screen bg-[#050811] flex flex-col text-slate-200">
       <header className="border-b border-white/5 p-8 flex justify-between items-center bg-[#0f172a]/40 backdrop-blur-2xl sticky top-0 z-20 shadow-2xl">
         <div className="flex items-center gap-6">
-          <Link to="/" className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5 group">
+          <Link to="/" className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5 group outline-none">
             <ArrowLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
           </Link>
           <div className="animate-fade-in">
@@ -126,7 +158,7 @@ const ProjectDetail = () => {
         <div className="flex items-center gap-6">
           <div className="flex -space-x-3">
             {project.members?.map(member => (
-              <div key={member.id} className="w-10 h-10 rounded-xl bg-indigo-600 border-4 border-[#0a0f1d] flex items-center justify-center text-xs font-bold shadow-xl" title={member.name}>
+              <div key={member.id} className="w-10 h-10 rounded-full bg-indigo-600 border-4 border-[#0a0f1d] flex items-center justify-center text-xs font-bold shadow-xl overflow-hidden" title={member.name}>
                 {member.name.charAt(0)}
               </div>
             ))}
@@ -147,78 +179,57 @@ const ProjectDetail = () => {
             <div key={column.id} className="w-96 flex-shrink-0 flex flex-col gap-6">
               <div className="flex justify-between items-center px-2">
                 <div className="flex items-center gap-3">
-                  <div className={`w-2 h-2 rounded-full bg-${column.color}-500 shadow-[0_0_10px_rgba(var(--${column.color}-rgb),0.5)]`}></div>
-                  <h3 className="font-bold text-slate-400 uppercase tracking-[0.2em] text-xs">{column.title}</h3>
-                  <span className="bg-white/5 text-slate-500 px-2.5 py-1 rounded-lg text-[10px] font-bold border border-white/5">
+                  <div className={`w-2 h-2 rounded-full ${getStatusColor(column.color)} shadow-[0_0_10px_rgba(99,102,241,0.5)]`}></div>
+                  <h3 className="font-bold text-slate-400 uppercase tracking-widest text-xs">{column.title}</h3>
+                  <span className="bg-white/5 px-2 py-0.5 rounded-md text-[10px] font-bold text-slate-500">
                     {tasks.filter(t => t.status === column.id).length}
                   </span>
                 </div>
-                <button className="p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-600">
-                  <Plus size={18} />
-                </button>
               </div>
 
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 min-h-[200px]">
                 {tasks.filter(t => t.status === column.id).map((task, index) => (
                   <div 
-                    key={task.id} 
+                    key={task.id}
                     onClick={() => openTaskDetail(task)}
-                    className="glass-card !p-6 hover:ring-2 hover:ring-indigo-500/50 transition-all cursor-pointer group animate-fade-in"
+                    className="glass-card !p-6 cursor-pointer hover:ring-2 hover:ring-indigo-500/30 transition-all animate-fade-in group"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <div className="flex justify-between items-start mb-4">
-                      <span className={`badge ${getPriorityStyle(task.priority)}`}>
+                      <span className={`badge ${
+                        task.priority === 'urgent' ? 'bg-rose-500/10 text-rose-400' :
+                        task.priority === 'high' ? 'bg-orange-500/10 text-orange-400' :
+                        task.priority === 'medium' ? 'bg-indigo-500/10 text-indigo-400' :
+                        'bg-slate-500/10 text-slate-400'
+                      }`}>
                         {task.priority}
                       </span>
-                      <button className="text-slate-600 hover:text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="text-slate-500 hover:text-white transition-colors">
                         <MoreVertical size={16} />
                       </button>
                     </div>
-                    <h4 className="font-bold text-lg mb-4 group-hover:text-indigo-400 transition-colors leading-snug">{task.title}</h4>
+                    <h4 className="font-bold mb-4 group-hover:text-indigo-400 transition-colors leading-snug">{task.title}</h4>
                     <div className="flex justify-between items-center pt-4 border-t border-white/5">
-                      <div className="flex items-center gap-4 text-slate-500">
-                        <div className="flex items-center gap-1.5">
-                          <MessageSquare size={14} />
-                          <span className="text-[10px] font-bold">{task.Comments?.length || 0}</span>
-                        </div>
-                        {task.due_date && (
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={14} />
-                            <span className="text-[10px] font-bold">{new Date(task.due_date).toLocaleDateString()}</span>
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                        <Clock size={14} />
+                        <span>{task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No date'}</span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <select 
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => handleUpdateStatus(task.id, e.target.value)}
-                          className="bg-white/5 border-none text-[10px] font-bold text-slate-500 rounded-lg py-1 px-2 outline-none hover:bg-white/10 transition-colors cursor-pointer"
-                          value={task.status}
-                        >
-                          {columns.map(col => <option key={col.id} value={col.id}>{col.title}</option>)}
-                        </select>
-                        {task.assignee ? (
-                          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-[10px] font-bold shadow-lg" title={task.assignee.name}>
-                            {task.assignee.name.charAt(0)}
-                          </div>
-                        ) : (
-                          <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-600 border border-white/5">
-                            <User size={14} />
-                          </div>
-                        )}
+                      <div className="w-8 h-8 rounded-full bg-indigo-600 border-2 border-[#0a0f1d] flex items-center justify-center text-[10px] font-bold shadow-lg" title={task.assignee?.name}>
+                        {task.assignee?.name?.charAt(0) || '?'}
                       </div>
                     </div>
                   </div>
                 ))}
+                
                 <button 
                   onClick={() => {
                     setNewTask(prev => ({ ...prev, status: column.id }));
                     setIsTaskModalOpen(true);
                   }}
-                  className="w-full py-4 border-2 border-dashed border-white/5 rounded-2xl text-slate-600 font-bold text-sm hover:border-indigo-500/30 hover:text-indigo-400 hover:bg-indigo-500/5 transition-all flex items-center justify-center gap-2 group"
+                  className="p-4 border-2 border-dashed border-white/5 rounded-2xl text-slate-500 hover:border-indigo-500/30 hover:text-indigo-400 hover:bg-indigo-500/5 transition-all font-bold text-sm flex items-center justify-center gap-2 group cursor-pointer"
                 >
                   <Plus size={18} className="group-hover:rotate-90 transition-transform" />
-                  Add New Task
+                  Add Task
                 </button>
               </div>
             </div>
@@ -226,7 +237,7 @@ const ProjectDetail = () => {
         </div>
       </main>
 
-      {/* Task Creation Modal */}
+      {/* Task Modal and Detail Panel remain consistent with Dashboard styling */}
       {isTaskModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="glass-card w-full max-w-xl border-white/10 shadow-2xl">
@@ -237,7 +248,7 @@ const ProjectDetail = () => {
                 </div>
                 <h2 className="text-2xl font-bold tracking-tight">Create New Task</h2>
               </div>
-              <button onClick={() => setIsTaskModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-400 hover:text-white">
+              <button onClick={() => setIsTaskModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-400 hover:text-white outline-none border-none cursor-pointer">
                 <X size={24} />
               </button>
             </div>
@@ -247,68 +258,54 @@ const ProjectDetail = () => {
                 <input
                   type="text"
                   className="input-field"
-                  placeholder="What needs to be done?"
+                  placeholder="Enter task title..."
                   value={newTask.title}
                   onChange={e => setNewTask({...newTask, title: e.target.value})}
                   required
                 />
               </div>
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Description</label>
-                <textarea
-                  className="input-field min-h-[120px] resize-none"
-                  placeholder="Add details about this task..."
-                  value={newTask.description}
-                  onChange={e => setNewTask({...newTask, description: e.target.value})}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-6 mb-10">
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Priority</label>
                   <select 
-                    className="input-field cursor-pointer"
+                    className="input-field"
                     value={newTask.priority}
                     onChange={e => setNewTask({...newTask, priority: e.target.value})}
                   >
-                    <option value="low">Low Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="high">High Priority</option>
-                    <option value="urgent">Urgent</option>
+                    <option value="low" className="bg-[#0f172a]">Low</option>
+                    <option value="medium" className="bg-[#0f172a]">Medium</option>
+                    <option value="high" className="bg-[#0f172a]">High</option>
+                    <option value="urgent" className="bg-[#0f172a]">Urgent</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Assignee</label>
-                  <select 
-                    className="input-field cursor-pointer"
-                    value={newTask.assigned_to}
-                    onChange={e => setNewTask({...newTask, assigned_to: e.target.value})}
-                  >
-                    <option value="">Unassigned</option>
-                    {project.members?.map(member => (
-                      <option key={member.id} value={member.id}>{member.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-span-2">
                   <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Due Date</label>
                   <input
                     type="date"
                     className="input-field"
                     value={newTask.due_date}
                     onChange={e => setNewTask({...newTask, due_date: e.target.value})}
-                    min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
+              </div>
+              <div className="mb-10">
+                <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Description</label>
+                <textarea
+                  className="input-field min-h-[120px] resize-none"
+                  placeholder="What needs to be done?"
+                  value={newTask.description}
+                  onChange={e => setNewTask({...newTask, description: e.target.value})}
+                />
               </div>
               <div className="flex gap-4">
                 <button 
                   type="button" 
                   onClick={() => setIsTaskModalOpen(false)}
-                  className="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-400 hover:bg-white/5 transition-all border border-white/5"
+                  className="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-400 hover:bg-white/5 transition-all border border-white/5 cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button type="submit" className="flex-1 btn-primary">
+                <button type="submit" className="flex-1 btn-primary border-none">
                   Create Task
                 </button>
               </div>
@@ -317,98 +314,102 @@ const ProjectDetail = () => {
         </div>
       )}
 
-      {/* Task Detail Modal (Side Panel) */}
+      {/* Task Detail Sidebar Panel */}
       {isDetailModalOpen && selectedTask && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-end z-50 animate-fade-in">
-          <div onClick={() => setIsDetailModalOpen(false)} className="absolute inset-0 cursor-pointer"></div>
+        <div className="fixed inset-0 z-50 flex justify-end animate-fade-in">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsDetailModalOpen(false)}></div>
           <motion.div 
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
-            className="w-full max-w-2xl h-full bg-[#0f172a] border-l border-white/5 p-12 overflow-y-auto relative shadow-2xl"
+            className="relative w-full max-w-2xl bg-[#0f172a] border-l border-white/10 h-full shadow-2xl flex flex-col"
           >
-            <div className="flex justify-between items-center mb-10">
-              <span className={`badge ${getPriorityStyle(selectedTask.priority)}`}>
-                {selectedTask.priority}
-              </span>
-              <button onClick={() => setIsDetailModalOpen(false)} className="p-3 hover:bg-white/5 rounded-2xl transition-all text-slate-400 hover:text-white">
-                <X size={28} />
+            <div className="p-8 border-b border-white/5 flex justify-between items-center bg-[#0a0f1d]/50">
+              <div className="flex items-center gap-4">
+                <span className={`badge ${
+                  selectedTask.priority === 'urgent' ? 'bg-rose-500/10 text-rose-400' :
+                  selectedTask.priority === 'high' ? 'bg-orange-500/10 text-orange-400' :
+                  'bg-indigo-500/10 text-indigo-400'
+                }`}>
+                  {selectedTask.priority}
+                </span>
+                <span className="text-slate-500">&bull;</span>
+                <div className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                  <Clock size={14} />
+                  <span>Due {selectedTask.due_date ? new Date(selectedTask.due_date).toLocaleDateString() : 'No date'}</span>
+                </div>
+              </div>
+              <button onClick={() => setIsDetailModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-400 hover:text-white outline-none border-none cursor-pointer">
+                <X size={24} />
               </button>
             </div>
 
-            <h2 className="text-4xl font-bold mb-10 tracking-tight leading-tight">{selectedTask.title}</h2>
-            
-            <div className="grid grid-cols-2 gap-10 mb-12 bg-white/5 p-8 rounded-3xl border border-white/5">
-              <div>
-                <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-3">Status</p>
-                <select 
-                  className="input-field !mb-0 cursor-pointer font-bold"
-                  value={selectedTask.status}
-                  onChange={(e) => handleUpdateStatus(selectedTask.id, e.target.value)}
-                >
-                  {columns.map(col => <option key={col.id} value={col.id}>{col.title}</option>)}
-                </select>
-              </div>
-              <div>
-                <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-3">Assignee</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-xl shadow-lg">
-                    {selectedTask.assignee?.name?.charAt(0) || <User size={20} />}
-                  </div>
-                  <div>
-                    <p className="font-bold">{selectedTask.assignee?.name || 'Unassigned'}</p>
-                    <p className="text-xs text-slate-500 font-medium">Team Member</p>
+            <div className="flex-1 overflow-y-auto p-12">
+              <h2 className="text-4xl font-bold mb-8 tracking-tight leading-tight">{selectedTask.title}</h2>
+              
+              <div className="grid grid-cols-2 gap-8 mb-12">
+                <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Status</p>
+                  <select 
+                    value={selectedTask.status}
+                    onChange={(e) => handleUpdateStatus(selectedTask.id, e.target.value)}
+                    className="bg-transparent font-bold text-indigo-400 outline-none border-none cursor-pointer"
+                  >
+                    {columns.map(c => <option key={c.id} value={c.id} className="bg-[#0f172a]">{c.title}</option>)}
+                  </select>
+                </div>
+                <div className="bg-white/5 p-6 rounded-3xl border border-white/5">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Assignee</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-[10px]">
+                      {selectedTask.assignee?.name?.charAt(0) || '?'}
+                    </div>
+                    <span className="font-bold text-sm">{selectedTask.assignee?.name || 'Unassigned'}</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mb-12">
-              <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-4">Task Description</p>
-              <p className="text-slate-300 text-lg leading-relaxed whitespace-pre-wrap">
-                {selectedTask.description || 'No description provided for this task.'}
-              </p>
-            </div>
+              <div className="mb-12">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-6">Description</p>
+                <p className="text-slate-300 text-lg leading-relaxed whitespace-pre-wrap">{selectedTask.description || 'No description provided.'}</p>
+              </div>
 
-            <div className="border-t border-white/5 pt-12">
-              <h3 className="text-2xl font-bold mb-8 flex items-center gap-3">
-                <MessageSquare size={24} className="text-indigo-400" />
-                Comments
-                <span className="text-sm font-bold text-slate-500 bg-white/5 px-3 py-1 rounded-full">{comments.length}</span>
-              </h3>
-
-              <form onSubmit={handleAddComment} className="mb-12">
-                <textarea
-                  className="input-field min-h-[140px] resize-none !mb-4 !p-6"
-                  placeholder="Leave a thought or update..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                />
-                <div className="flex justify-end">
-                  <button type="submit" className="btn-primary">Post Comment</button>
+              <div className="border-t border-white/5 pt-12">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-xl font-bold tracking-tight flex items-center gap-3">
+                    <MessageSquare size={20} className="text-indigo-400" />
+                    Comments
+                    <span className="bg-white/5 px-2 py-0.5 rounded-md text-[10px] text-slate-500">{comments.length}</span>
+                  </h3>
                 </div>
-              </form>
 
-              <div className="flex flex-col gap-8">
-                {comments.length === 0 ? (
-                  <div className="p-12 text-center bg-white/5 rounded-3xl border border-dashed border-white/10">
-                    <p className="text-slate-500 font-medium italic text-lg">No comments yet. Start the conversation!</p>
+                <form onSubmit={handleAddComment} className="mb-10">
+                  <textarea
+                    className="input-field min-h-[100px] resize-none mb-4"
+                    placeholder="Write a comment..."
+                    value={newComment}
+                    onChange={e => setNewComment(e.target.value)}
+                  />
+                  <div className="flex justify-end">
+                    <button type="submit" className="btn-primary px-6 py-3">Send Comment</button>
                   </div>
-                ) : (
-                  comments.map((comment, index) => (
-                    <div key={comment.id} className="flex gap-5 animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
-                      <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0 font-bold text-indigo-400 text-lg shadow-inner">
-                        {comment.User?.name?.charAt(0)}
+                </form>
+
+                <div className="flex flex-col gap-6">
+                  {comments.map(comment => (
+                    <div key={comment.id} className="flex gap-4 group animate-fade-in">
+                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center font-bold text-xs flex-shrink-0 border border-white/5">
+                        {comment.User?.name?.charAt(0) || '?'}
                       </div>
-                      <div className="flex-1 bg-white/5 p-6 rounded-3xl rounded-tl-none border border-white/5">
+                      <div className="flex-1 bg-white/5 p-6 rounded-3xl border border-white/5 group-hover:bg-white/10 transition-colors">
                         <div className="flex justify-between items-center mb-3">
-                          <span className="font-bold text-slate-200">{comment.User?.name}</span>
+                          <span className="font-bold text-sm text-indigo-400">{comment.User?.name}</span>
                           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{new Date(comment.createdAt).toLocaleDateString()}</span>
                         </div>
-                        <p className="text-slate-400 leading-relaxed">{comment.content}</p>
+                        <p className="text-slate-300 leading-relaxed">{comment.content}</p>
                       </div>
                     </div>
-                  ))
-                )}
+                  ))}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -416,15 +417,6 @@ const ProjectDetail = () => {
       )}
     </div>
   );
-};
-
-const getPriorityStyle = (priority) => {
-  switch (priority) {
-    case 'urgent': return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-    case 'high': return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
-    case 'medium': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-    default: return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-  }
 };
 
 export default ProjectDetail;

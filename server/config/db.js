@@ -12,7 +12,7 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
     ssl: {
       require: true,
       rejectUnauthorized: true,
-      ca: fs.readFileSync(path.join(__dirname, '../ca.pem')).toString(),
+      ca: process.env.DB_CA_CONTENT || fs.readFileSync(path.join(__dirname, '../ca.pem')).toString(),
     }
   }
 });

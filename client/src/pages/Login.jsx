@@ -77,8 +77,8 @@ const Login = () => {
           </button>
         </form>
 
-        <p className="text-center mt-6 text-gray-400">
-          Don't have an account? <Link to="/signup">Sign up</Link>
+        <p className="text-center mt-6 text-slate-500">
+          Don't have an account? <Link to="/signup" className="text-indigo-400 font-bold hover:text-indigo-300 transition-colors">Sign up</Link>
         </p>
       </motion.div>
     </div>
