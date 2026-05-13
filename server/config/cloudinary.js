@@ -11,7 +11,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'ethara_attachments',
+    folder: 'taskmaps_attachments',
     allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'docx', 'xlsx', 'txt'],
     resource_type: 'auto'
   }

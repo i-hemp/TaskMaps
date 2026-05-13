@@ -1,4 +1,4 @@
-# TaskMaps (Ethara.ai)
+# TaskMaps
 
 A premium, full-stack team task management application built with a modern dark-mode aesthetic.
 

@@ -61,6 +61,22 @@ body {
   @apply border-[#6366f1] bg-black/30 ring-4 ring-[#6366f1]/10;
 }
 
+.input-group {
+  @apply relative;
+}
+
+.input-group .input-icon {
+  @apply absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 transition-colors duration-300;
+}
+
+.input-group:focus-within .input-icon {
+  @apply text-indigo-400;
+}
+
+.input-group .input-field {
+  @apply pl-12;
+}
+
 .badge {
   @apply px-3 py-1 rounded-full text-[0.7rem] font-bold uppercase tracking-widest;
 }
