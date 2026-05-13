@@ -4,7 +4,19 @@ const ProjectMember = require('./ProjectMember');
 const Task = require('./Task');
 const Comment = require('./Comment');
 const Notification = require('./Notification');
+const Label = require('./Label');
+const TaskLabel = require('./TaskLabel');
+const Attachment = require('./Attachment');
+const Activity = require('./Activity');
 const sequelize = require('../config/db');
+
+// ... associations ...
+User.hasMany(Activity, { foreignKey: 'user_id' });
+Activity.belongsTo(User, { foreignKey: 'user_id' });
+
+Project.hasMany(Activity, { foreignKey: 'project_id', onDelete: 'CASCADE' });
+Activity.belongsTo(Project, { foreignKey: 'project_id' });
+
 
 // User - Project (One to many, as creator)
 User.hasMany(Project, { foreignKey: 'created_by' });
@@ -22,6 +34,22 @@ ProjectMember.belongsTo(User, { foreignKey: 'user_id' });
 // Project - Task
 Project.hasMany(Task, { foreignKey: 'project_id', onDelete: 'CASCADE' });
 Task.belongsTo(Project, { foreignKey: 'project_id' });
+
+// Project - Label
+Project.hasMany(Label, { foreignKey: 'project_id', onDelete: 'CASCADE' });
+Label.belongsTo(Project, { foreignKey: 'project_id' });
+
+// Task - Label (Many to many)
+Task.belongsToMany(Label, { through: TaskLabel, foreignKey: 'task_id', as: 'labels' });
+Label.belongsToMany(Task, { through: TaskLabel, foreignKey: 'label_id' });
+
+// Task - Attachment
+Task.hasMany(Attachment, { foreignKey: 'task_id', onDelete: 'CASCADE', as: 'attachments' });
+Attachment.belongsTo(Task, { foreignKey: 'task_id' });
+
+// Task - Subtasks (Self-referential)
+Task.hasMany(Task, { as: 'subtasks', foreignKey: 'parent_id', onDelete: 'CASCADE' });
+Task.belongsTo(Task, { as: 'parent', foreignKey: 'parent_id' });
 
 // User - Task (Assigned to)
 User.hasMany(Task, { foreignKey: 'assigned_to' });
@@ -50,5 +78,9 @@ module.exports = {
   Task,
   Comment,
   Notification,
+  Label,
+  TaskLabel,
+  Attachment,
+  Activity,
   sequelize
 };

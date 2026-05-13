@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useProjects } from '../context/ProjectContext';
 import { useNotifications } from '../context/NotificationContext';
 import api from '../api/axios';
-import { LogOut, LayoutDashboard, Settings, Users, FolderKanban, Plus, X, Bell, Clock } from 'lucide-react';
+import { LogOut, LayoutDashboard, Settings, Users, FolderKanban, Plus, X, Bell, Clock, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import EmptyState from '../components/EmptyState';
 import { CardSkeleton, StatSkeleton } from '../components/Skeleton';
@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [newProject, setNewProject] = useState({ name: '', description: '' });
   const [stats, setStats] = useState({ projectsCount: 0, overdueCount: 0, myTasksCount: 0 });
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -37,10 +38,11 @@ const Dashboard = () => {
   const handleCreateProject = async (e) => {
     e.preventDefault();
     try {
-      await createProject(newProject);
+      const project = await createProject(newProject);
       toast.success('Project created successfully!');
       setIsModalOpen(false);
       setNewProject({ name: '', description: '' });
+      navigate(`/project/${project.id}`);
     } catch (error) {
       toast.error('Failed to create project');
     }
@@ -87,12 +89,14 @@ const Dashboard = () => {
           
           <div className="flex-1 max-w-xl mx-12 relative group hidden xl:block animate-fade-in" style={{ animationDelay: '100ms' }}>
             <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-              <Plus className="text-slate-500 group-focus-within:text-indigo-400 transition-colors rotate-45" size={20} />
+              <Search className="text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
             </div>
             <input 
               type="text" 
               placeholder="Search tasks, projects, members... (Ctrl+K)" 
               className="w-full bg-white/5 border border-white/5 rounded-2xl py-4 pl-14 pr-6 text-sm text-slate-200 outline-none focus:bg-white/10 focus:border-indigo-500/50 transition-all shadow-inner"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
@@ -198,7 +202,9 @@ const Dashboard = () => {
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project, index) => (
+            {projects
+              .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.description?.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map((project, index) => (
               <div 
                 key={project.id} 
                 onClick={() => navigate(`/project/${project.id}`)}

@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-import { Plus, MoreVertical, MessageSquare, Clock, User, ArrowLeft, X } from 'lucide-react';
+import { Plus, MoreVertical, MessageSquare, Clock, User, ArrowLeft, X, UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { TaskSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 
 const ProjectDetail = () => {
+  const { user: currentUser } = useAuth();
   const { id } = useParams();
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [newMemberEmail, setNewMemberEmail] = useState('');
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [comments, setComments] = useState([]);
@@ -57,6 +61,19 @@ const ProjectDetail = () => {
     }
   };
 
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post(`/projects/${id}/members`, { email: newMemberEmail });
+      toast.success('Member added successfully!');
+      setIsMemberModalOpen(false);
+      setNewMemberEmail('');
+      fetchProjectData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add member');
+    }
+  };
+
   const openTaskDetail = async (task) => {
     setSelectedTask(task);
     setIsDetailModalOpen(true);
@@ -95,6 +112,8 @@ const ProjectDetail = () => {
       toast.error('Failed to update status');
     }
   };
+
+  const isAdmin = project?.members?.find(m => m.id === currentUser?.id)?.ProjectMember?.role === 'admin' || project?.created_by === currentUser?.id;
 
   if (loading) return (
     <div className="min-h-screen bg-[#050811] flex flex-col">
@@ -163,6 +182,15 @@ const ProjectDetail = () => {
               </div>
             ))}
           </div>
+          {isAdmin && (
+            <button 
+              onClick={() => setIsMemberModalOpen(true)}
+              className="p-3 bg-white/5 rounded-2xl hover:bg-white/10 transition-all border border-white/5 group relative outline-none"
+              title="Add Member"
+            >
+              <UserPlus size={20} className="text-indigo-400" />
+            </button>
+          )}
           <button 
             onClick={() => setIsTaskModalOpen(true)}
             className="btn-primary"
@@ -413,6 +441,49 @@ const ProjectDetail = () => {
               </div>
             </div>
           </motion.div>
+        </div>
+      )}
+      {/* Add Member Modal */}
+      {isMemberModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="glass-card w-full max-w-md border-white/10 shadow-2xl">
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-400">
+                  <UserPlus size={24} />
+                </div>
+                <h2 className="text-2xl font-bold tracking-tight">Add Team Member</h2>
+              </div>
+              <button onClick={() => setIsMemberModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-400 hover:text-white outline-none border-none cursor-pointer">
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleAddMember}>
+              <div className="mb-8">
+                <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-widest">Email Address</label>
+                <input
+                  type="email"
+                  className="input-field"
+                  placeholder="Enter user email..."
+                  value={newMemberEmail}
+                  onChange={e => setNewMemberEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="flex gap-4">
+                <button 
+                  type="button" 
+                  onClick={() => setIsMemberModalOpen(false)}
+                  className="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-400 hover:bg-white/5 transition-all border border-white/5 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="flex-1 btn-primary border-none">
+                  Add Member
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

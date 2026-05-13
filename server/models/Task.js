@@ -38,6 +38,14 @@ const Task = sequelize.define('Task', {
   due_date: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  parent_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'Tasks',
+      key: 'id'
+    }
   }
 });
 

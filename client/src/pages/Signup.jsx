@@ -41,11 +41,11 @@ const Signup = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="relative mb-4">
-            <User className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Full Name"
-              className="input-field pl-10"
+              className="input-field pl-12"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -53,11 +53,11 @@ const Signup = () => {
           </div>
 
           <div className="relative mb-4">
-            <Mail className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="email"
               placeholder="Email address"
-              className="input-field pl-10"
+              className="input-field pl-12"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -65,11 +65,11 @@ const Signup = () => {
           </div>
 
           <div className="relative mb-6">
-            <Lock className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="password"
               placeholder="Password (min 6 chars)"
-              className="input-field pl-10"
+              className="input-field pl-12"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

@@ -35,6 +35,7 @@ app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/projects/:pid/tasks', require('./routes/taskRoutes'));
+app.use('/api/projects/:pid/labels', require('./routes/labelRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 

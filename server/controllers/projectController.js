@@ -39,7 +39,13 @@ exports.getProjectById = async (req, res) => {
   try {
     const project = await Project.findByPk(req.params.id, {
       include: [
-        { model: User, as: 'members', attributes: ['id', 'name', 'email'] }
+        { 
+          model: User, 
+          as: 'members', 
+          attributes: ['id', 'name', 'email', 'avatar_url'],
+          through: { attributes: ['role'] }
+        },
+        { model: User, as: 'creator', attributes: ['id', 'name', 'avatar_url'] }
       ]
     });
 
@@ -90,6 +96,17 @@ exports.deleteProject = async (req, res) => {
 exports.addMember = async (req, res) => {
   try {
     const { email, role } = req.body;
+    
+    // Check if requester is admin or creator
+    const project = await Project.findByPk(req.params.id);
+    const requester = await ProjectMember.findOne({
+      where: { project_id: req.params.id, user_id: req.user.id, role: 'admin' }
+    });
+
+    if (!requester && project.created_by !== req.user.id) {
+      return res.status(403).json({ message: 'Only project admins or the creator can add members' });
+    }
+
     const user = await User.findOne({ where: { email } });
 
     if (!user) {

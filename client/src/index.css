@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
 :root {
   --bg-color: #050811;
@@ -54,7 +54,7 @@ body {
 }
 
 .input-field {
-  @apply bg-black/20 border border-white/10 rounded-2xl px-5 py-4 text-white w-full mb-5 outline-none transition-all duration-300 font-inherit;
+  @apply bg-black/20 border border-white/10 rounded-2xl px-5 py-4 text-white w-full outline-none transition-all duration-300 font-outfit;
 }
 
 .input-field:focus {
